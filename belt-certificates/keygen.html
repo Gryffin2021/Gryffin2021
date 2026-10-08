@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unlock Code Generator</title>
+<meta name="description" content="Mint unlock codes for Belt Certificate Studio. Runs locally in your browser.">
+<style>
+:root{
+  --bg:#f6f7f9; --panel:#fff; --ink:#15181d; --ink-soft:#5b6472;
+  --line:#e3e6eb; --line-strong:#cdd3dc; --accent:#8a1c1c; --accent-ink:#fff;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#14171c; --panel:#1b1f26; --ink:#e9ecf1; --ink-soft:#9aa5b4;
+    --line:#2b313a; --line-strong:#3a424e; --accent:#c94a4a; --accent-ink:#1a0e0e;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14171c; --panel:#1b1f26; --ink:#e9ecf1; --ink-soft:#9aa5b4;
+  --line:#2b313a; --line-strong:#3a424e; --accent:#c94a4a; --accent-ink:#1a0e0e;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;padding:40px 16px;background:var(--bg);color:var(--ink);
+  font:15px/1.55 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+.wrap{max-width:620px;margin:0 auto}
+h1{font-size:21px;margin:0 0 6px;letter-spacing:-.01em}
+.sub{color:var(--ink-soft);margin:0 0 26px;font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin:0 0 18px}
+label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin:0 0 5px}
+input{
+  width:100%;padding:9px 11px;border:1px solid var(--line-strong);
+  border-radius:8px;background:var(--bg);color:inherit;font:inherit;
+}
+input:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.row{display:grid;grid-template-columns:1fr 130px;gap:12px;align-items:end}
+@media(max-width:520px){.row{grid-template-columns:1fr}}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;margin-top:16px;
+  padding:10px 16px;border-radius:8px;border:1px solid var(--accent);
+  background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:600;cursor:pointer;
+}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:var(--panel);color:var(--ink);border-color:var(--line-strong);font-weight:500}
+pre{
+  display:block;margin:16px 0 0;padding:14px;background:var(--bg);
+  border:1px solid var(--line-strong);border-radius:8px;
+  font:14px/1.9 ui-monospace,SFMono-Regular,Menlo,monospace;
+  white-space:pre-wrap;word-break:break-all;min-height:24px;
+}
+.note{font-size:13px;color:var(--ink-soft);margin:14px 0 0;line-height:1.6}
+.note b{color:var(--ink)}
+.warn{
+  border-left:3px solid var(--accent);padding:12px 14px;background:var(--panel);
+  border-radius:0 8px 8px 0;font-size:13.5px;line-height:1.6;margin:0 0 18px;
+}
+code{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--bg);padding:1px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Unlock Code Generator</h1>
+  <p class="sub">Mints codes for Belt Certificate Studio. Runs entirely in this page — nothing is sent anywhere.</p>
+
+  <div class="warn">
+    The salt below must match <code>CONFIG.keySalt</code> in <code>index.html</code> exactly, or the codes
+    you hand out will not work. Change the salt in both places together, and only before your first sale.
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <label for="salt">Salt — must match CONFIG.keySalt</label>
+        <input id="salt" type="text" value="belt-certificate-studio" spellcheck="false">
+      </div>
+      <div>
+        <label for="n">How many</label>
+        <input id="n" type="number" min="1" max="200" value="5">
+      </div>
+    </div>
+    <button class="btn" id="gen">Generate codes</button>
+    <button class="btn ghost" id="copy">Copy all</button>
+    <pre id="out"></pre>
+    <p class="note">
+      <b>Selling one code to everyone</b> is the fastest setup: generate a single code and paste it into your
+      payment provider's post-payment confirmation message. Buyers see it the moment they pay, and you never
+      touch a thing.<br><br>
+      <b>Selling one code per buyer</b> looks more professional and lets you keep a record of who got which
+      code. It costs you a manual email per sale, or an automation.
+    </p>
+  </div>
+
+  <div class="card">
+    <label for="check">Check a code</label>
+    <input id="check" type="text" placeholder="BELT-XXXX-XXXX-XX" spellcheck="false">
+    <pre id="verdict">—</pre>
+  </div>
+</div>
+
+<script>
+const A32 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"; // no I, L, O, U
+
+function keyChecksum(payload, salt){
+  let x = 0x811c9dc5;
+  const s = salt + "|" + payload;
+  for (let i = 0; i < s.length; i++){
+    x ^= s.charCodeAt(i);
+    x = Math.imul(x, 0x01000193) >>> 0;
+  }
+  return A32[(x >>> 5) & 31] + A32[x & 31];
+}
+
+function keyIsValid(raw, salt){
+  const k = String(raw || "").toUpperCase().replace(/[^0-9A-Z]/g, "");
+  if (!k.startsWith("BELT")) return false;
+  const body = k.slice(4);
+  if (body.length !== 10) return false;
+  const payload = body.slice(0, 8), check = body.slice(8);
+  if ([...payload].some(c => !A32.includes(c))) return false;
+  return keyChecksum(payload, salt) === check;
+}
+
+function mint(salt){
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  const payload = [...bytes].map(b => A32[b & 31]).join("");
+  const body = payload + keyChecksum(payload, salt);
+  return `BELT-${body.slice(0,4)}-${body.slice(4,8)}-${body.slice(8)}`;
+}
+
+const $ = id => document.getElementById(id);
+
+$("gen").addEventListener("click", () => {
+  const salt = $("salt").value;
+  const n = Math.max(1, Math.min(200, parseInt($("n").value, 10) || 1));
+  const seen = new Set();
+  while (seen.size < n) seen.add(mint(salt));
+  $("out").textContent = [...seen].join("\n");
+});
+
+$("copy").addEventListener("click", async () => {
+  const txt = $("out").textContent.trim();
+  if (!txt) return;
+  try { await navigator.clipboard.writeText(txt); $("copy").textContent = "Copied"; }
+  catch { $("copy").textContent = "Select and copy manually"; }
+  setTimeout(() => { $("copy").textContent = "Copy all"; }, 1600);
+});
+
+$("check").addEventListener("input", e => {
+  const v = e.target.value.trim();
+  $("verdict").textContent = !v ? "—"
+    : keyIsValid(v, $("salt").value) ? "✓ valid for this salt"
+    : "✗ not valid for this salt";
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Belt Certificate Studio</title>
+<meta name="description" content="Print belt promotion certificates for your whole class in one go. Runs entirely in your browser — no account, no upload, no install.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Great+Vibes&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f7f9; --panel:#ffffff; --ink:#15181d; --ink-soft:#5b6472;
+  --line:#e3e6eb; --line-strong:#cdd3dc;
+  --accent:#8a1c1c; --accent-ink:#ffffff;
+  --ok:#1d7a4c; --warn:#8a5a00;
+  --radius:10px; --shadow:0 1px 2px rgba(16,20,28,.06),0 8px 24px rgba(16,20,28,.06);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#14171c; --panel:#1b1f26; --ink:#e9ecf1; --ink-soft:#9aa5b4;
+    --line:#2b313a; --line-strong:#3a424e;
+    --accent:#c94a4a; --accent-ink:#1a0e0e;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14171c; --panel:#1b1f26; --ink:#e9ecf1; --ink-soft:#9aa5b4;
+  --line:#2b313a; --line-strong:#3a424e;
+  --accent:#c94a4a; --accent-ink:#1a0e0e;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font:15px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.01em}
+a{color:var(--accent)}
+button,input,select,textarea{font:inherit;color:inherit}
+
+/* ---------- app chrome ---------- */
+.topbar{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:14px 16px;border-bottom:1px solid var(--line);background:var(--panel);
+  position:sticky;top:0;z-index:20;
+}
+.brand{display:flex;align-items:center;gap:9px;margin-right:auto;min-width:0}
+.brand svg{flex:none}
+.brand b{font-size:15px;font-weight:600;white-space:nowrap}
+.brand span{color:var(--ink-soft);font-size:12.5px;white-space:nowrap}
+@media(max-width:640px){.brand span{display:none}}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:9px 14px;border-radius:8px;border:1px solid var(--line-strong);
+  background:var(--panel);cursor:pointer;font-weight:500;font-size:14px;
+  white-space:nowrap;transition:border-color .12s,background .12s;
+}
+.btn:hover{border-color:var(--ink-soft)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.layout{display:grid;grid-template-columns:360px minmax(0,1fr);gap:0;align-items:start}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+
+.panel{
+  padding:16px;border-right:1px solid var(--line);background:var(--panel);
+  position:sticky;top:61px;max-height:calc(100vh - 61px);overflow-y:auto;
+}
+@media(max-width:900px){.panel{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--line)}}
+
+fieldset{border:0;margin:0 0 20px;padding:0}
+legend{
+  font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;
+  color:var(--ink-soft);padding:0 0 9px;
+}
+label{display:block;font-size:12.5px;font-weight:500;color:var(--ink-soft);margin:0 0 5px}
+.field{margin:0 0 12px}
+input[type=text],input[type=date],select,textarea{
+  width:100%;padding:9px 11px;border:1px solid var(--line-strong);border-radius:8px;
+  background:var(--bg);
+}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent)}
+textarea{resize:vertical;min-height:112px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.6}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hint{font-size:12px;color:var(--ink-soft);margin:5px 0 0}
+
+.seg{display:flex;gap:4px;padding:3px;background:var(--bg);border:1px solid var(--line-strong);border-radius:9px;margin:0 0 14px}
+.seg button{flex:1;padding:7px;border:0;background:transparent;border-radius:6px;cursor:pointer;font-size:13.5px;font-weight:500;color:var(--ink-soft)}
+.seg button[aria-pressed=true]{background:var(--panel);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+
+.swatch{display:inline-block;width:11px;height:11px;border-radius:3px;border:1px solid rgba(0,0,0,.25);vertical-align:-1px;margin-right:6px}
+
+.logo-row{display:flex;align-items:center;gap:10px}
+.logo-prev{
+  width:46px;height:46px;flex:none;border:1px dashed var(--line-strong);border-radius:8px;
+  display:grid;place-items:center;overflow:hidden;background:var(--bg);
+  font-size:10px;color:var(--ink-soft);text-align:center;
+}
+.logo-prev img{width:100%;height:100%;object-fit:contain}
+
+/* ---------- unlock banner ---------- */
+.gate{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:11px 13px;border:1px solid var(--line-strong);border-radius:var(--radius);
+  background:var(--bg);margin:0 0 18px;font-size:13px;
+}
+.gate .g-txt{flex:1;min-width:170px;color:var(--ink-soft);line-height:1.45}
+.gate.unlocked{border-color:color-mix(in srgb,var(--ok) 45%,var(--line-strong))}
+.gate b{color:var(--ink)}
+.pill{
+  display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;
+  padding:2px 8px;border-radius:999px;background:var(--ok);color:#fff;letter-spacing:.02em;
+}
+
+/* ---------- preview area ---------- */
+.stage{padding:20px 16px 56px;min-width:0}
+.stage-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 14px}
+.stage-head h2{font-size:14px}
+.stage-head .count{font-size:13px;color:var(--ink-soft)}
+.sheets{display:flex;flex-direction:column;gap:22px;max-width:1000px;margin:0 auto}
+.sheet{box-shadow:var(--shadow);border-radius:4px;overflow:hidden;background:#fff}
+
+.empty{
+  max-width:1000px;margin:0 auto;padding:44px 20px;text-align:center;
+  border:1px dashed var(--line-strong);border-radius:var(--radius);color:var(--ink-soft);
+}
+
+/* ---------- THE CERTIFICATE ---------- */
+.cert{
+  container-type:inline-size;
+  width:100%;aspect-ratio:11/8.5;
+  background:#fff;color:#1a1a1a;position:relative;overflow:hidden;
+  font-family:"Cormorant Garamond",Georgia,"Times New Roman",serif;
+}
+.cert-inner{
+  position:absolute;inset:3.2cqw;
+  border:0.16cqw solid var(--c-accent,#8a1c1c);
+  padding:3.4cqw 4.4cqw;
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+}
+.cert-inner::before{
+  content:"";position:absolute;inset:0.75cqw;border:0.07cqw solid var(--c-accent,#8a1c1c);
+  opacity:.45;pointer-events:none;
+}
+.c-corner{position:absolute;width:3.1cqw;height:3.1cqw;color:var(--c-accent,#8a1c1c);opacity:.8}
+.c-corner.tl{top:1.3cqw;left:1.3cqw}
+.c-corner.tr{top:1.3cqw;right:1.3cqw;transform:scaleX(-1)}
+.c-corner.bl{bottom:1.3cqw;left:1.3cqw;transform:scaleY(-1)}
+.c-corner.br{bottom:1.3cqw;right:1.3cqw;transform:scale(-1,-1)}
+
+.c-logo{height:5.4cqw;max-width:30cqw;object-fit:contain;margin:0 0 1.1cqw}
+.c-school{
+  font-size:2.5cqw;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  line-height:1.2;margin:0;
+}
+.c-loc{font-size:1.18cqw;letter-spacing:.2em;text-transform:uppercase;color:#6b6b6b;margin:.5cqw 0 0}
+.c-rule{
+  width:17cqw;height:0;border-top:0.1cqw solid var(--c-accent,#8a1c1c);
+  margin:1.5cqw 0;opacity:.75;position:relative;
+}
+.c-rule::after{
+  content:"";position:absolute;left:50%;top:50%;width:.8cqw;height:.8cqw;
+  transform:translate(-50%,-50%) rotate(45deg);
+  background:#fff;border:0.1cqw solid var(--c-accent,#8a1c1c);
+}
+.c-title{
+  font-size:2.9cqw;font-weight:600;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--c-accent,#8a1c1c);line-height:1.15;margin:0;
+}
+.c-sub{font-size:1.5cqw;font-style:italic;color:#555;margin:1.6cqw 0 .35cqw}
+.c-name{
+  font-family:"Great Vibes","Segoe Script",cursive;
+  font-size:6.4cqw;line-height:1.08;margin:0;padding:0 2cqw;
+  color:#111;max-width:100%;overflow-wrap:break-word;
+}
+.c-name-rule{width:52cqw;max-width:88%;height:0;border-top:0.07cqw solid #c9c9c9;margin:.5cqw 0 1.5cqw}
+.c-rank-label{font-size:1.5cqw;font-style:italic;color:#555;margin:0 0 .7cqw}
+.c-rank{
+  display:inline-flex;align-items:center;gap:1.1cqw;
+  font-size:3.1cqw;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  margin:0;
+}
+.c-belt{
+  width:5.6cqw;height:1.35cqw;border-radius:.2cqw;flex:none;
+  border:0.07cqw solid rgba(0,0,0,.3);
+  background:var(--c-belt,#222);
+}
+.c-foot{
+  margin-top:auto;width:100%;display:flex;align-items:flex-end;
+  justify-content:space-between;gap:3cqw;padding-top:2.4cqw;
+}
+.c-sig{flex:1;min-width:0;max-width:30cqw}
+.c-sig-line{border-top:0.08cqw solid #333;margin:0 0 .5cqw;height:0}
+.c-sig-val{font-size:1.5cqw;font-weight:600;line-height:1.25;overflow-wrap:break-word}
+.c-sig-cap{
+  font-size:1.02cqw;letter-spacing:.17em;text-transform:uppercase;color:#777;margin:.28cqw 0 0;
+}
+.c-seal{
+  flex:none;width:8.4cqw;height:8.4cqw;border-radius:50%;
+  border:0.16cqw solid var(--c-accent,#8a1c1c);
+  display:grid;place-items:center;align-content:center;gap:0;
+  color:var(--c-accent,#8a1c1c);line-height:1.1;
+}
+.c-seal .s1{font-size:1.02cqw;letter-spacing:.14em;text-transform:uppercase}
+.c-seal .s2{font-size:2.1cqw;font-weight:700}
+.c-seal .s3{font-size:.86cqw;letter-spacing:.1em;text-transform:uppercase;opacity:.75}
+.c-credit{
+  position:absolute;bottom:1.15cqw;left:0;right:0;text-align:center;
+  font-family:Inter,system-ui,sans-serif;font-size:.82cqw;color:#9a9a9a;letter-spacing:.04em;
+}
+.c-serial{
+  position:absolute;bottom:1.15cqw;right:3.6cqw;
+  font-family:Inter,system-ui,sans-serif;font-size:.82cqw;color:#b4b4b4;letter-spacing:.06em;
+}
+
+/* ---------- print ---------- */
+@page{size:letter landscape;margin:0}
+@media print{
+  :root{--bg:#fff}
+  html,body{background:#fff!important}
+  .topbar,.panel,.stage-head,.empty,.no-print{display:none!important}
+  .layout{display:block}
+  .stage{padding:0}
+  .sheets{display:block;gap:0;max-width:none;margin:0}
+  .sheet{box-shadow:none;border-radius:0;margin:0}
+  .cert{
+    width:11in;height:8.5in;aspect-ratio:auto;
+    break-after:page;page-break-after:always;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  .sheet:last-child .cert{break-after:auto;page-break-after:auto}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="9" r="5.2" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M8.4 13.4 6.2 21l5.8-3 5.8 3-2.2-7.6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    </svg>
+    <b>Belt Certificate Studio</b>
+    <span>· a whole class, one print job</span>
+  </div>
+  <button class="btn" id="themeBtn" title="Toggle light / dark">Theme</button>
+  <button class="btn primary" id="printBtn">Print / Save PDF</button>
+</header>
+
+<div class="layout">
+  <!-- ============ CONTROLS ============ -->
+  <form class="panel" id="panel" autocomplete="off">
+
+    <div class="gate" id="gate">
+      <div class="g-txt" id="gateTxt">Loading…</div>
+      <button type="button" class="btn" id="gateBtn">Unlock</button>
+    </div>
+
+    <fieldset>
+      <legend>School</legend>
+      <div class="field">
+        <label for="school">School / dojang name</label>
+        <input type="text" id="school" placeholder="Evergreen Taekwondo Academy">
+      </div>
+      <div class="field">
+        <label for="loc">Location <span style="font-weight:400">(optional)</span></label>
+        <input type="text" id="loc" placeholder="Portland, Oregon">
+      </div>
+      <div class="field">
+        <label>Logo <span style="font-weight:400">(optional)</span></label>
+        <div class="logo-row">
+          <div class="logo-prev" id="logoPrev">none</div>
+          <div style="flex:1;min-width:0">
+            <input type="file" id="logoIn" accept="image/*" style="font-size:12.5px;width:100%">
+            <button type="button" class="btn" id="logoClear" style="padding:5px 10px;font-size:12.5px;margin-top:6px">Remove</button>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Signatures</legend>
+      <div class="field">
+        <label for="inst">Instructor name</label>
+        <input type="text" id="inst" placeholder="Master Jae-won Park">
+      </div>
+      <div class="field">
+        <label for="instTitle">Instructor title</label>
+        <input type="text" id="instTitle" placeholder="Head Instructor">
+      </div>
+      <div class="field">
+        <label for="inst2">Second signer <span style="font-weight:400">(optional)</span></label>
+        <input type="text" id="inst2" placeholder="">
+      </div>
+      <div class="field">
+        <label for="inst2Title">Second signer title</label>
+        <input type="text" id="inst2Title" placeholder="Program Director">
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Students</legend>
+      <div class="seg" role="group" aria-label="Entry mode">
+        <button type="button" id="modeOne" aria-pressed="true">One student</button>
+        <button type="button" id="modeMany" aria-pressed="false">Whole class</button>
+      </div>
+
+      <div id="paneOne">
+        <div class="field">
+          <label for="sName">Student name</label>
+          <input type="text" id="sName" placeholder="Ava Thompson">
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="sBelt">Promoted to</label>
+            <select id="sBelt"></select>
+          </div>
+          <div class="field">
+            <label for="sDate">Date</label>
+            <input type="date" id="sDate">
+          </div>
+        </div>
+      </div>
+
+      <div id="paneMany" hidden>
+        <div class="field">
+          <label for="bulk">One student per line — <code>Name, Belt, Date</code></label>
+          <textarea id="bulk" spellcheck="false" placeholder="Ava Thompson, Green, 2026-10-08
+Noah Kim, Green
+Mia Patel, Blue, 2026-10-08"></textarea>
+          <p class="hint">Belt and date are optional on each line — blank ones fall back to the defaults below. Paste straight from a spreadsheet column.</p>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="bBelt">Default belt</label>
+            <select id="bBelt"></select>
+          </div>
+          <div class="field">
+            <label for="bDate">Default date</label>
+            <input type="date" id="bDate">
+          </div>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Wording</legend>
+      <div class="field">
+        <label for="wTitle">Headline</label>
+        <input type="text" id="wTitle" value="Certificate of Promotion">
+      </div>
+      <div class="field">
+        <label for="wPre">Line above the name</label>
+        <input type="text" id="wPre" value="This certifies that">
+      </div>
+      <div class="field">
+        <label for="wPost">Line below the name</label>
+        <input type="text" id="wPost" value="has met every requirement and is hereby promoted to the rank of">
+      </div>
+      <div class="field">
+        <label for="accent">Accent colour</label>
+        <select id="accent">
+          <option value="#8a1c1c">Deep red</option>
+          <option value="#11325e">Navy</option>
+          <option value="#1a5336">Forest green</option>
+          <option value="#5a3a86">Royal purple</option>
+          <option value="#8a6a1c">Antique gold</option>
+          <option value="#232323">Charcoal</option>
+        </select>
+      </div>
+      <div class="field">
+        <label><input type="checkbox" id="serialOn" style="width:auto;margin-right:7px;vertical-align:-2px">Print a certificate number</label>
+        <p class="hint">Sequential, prefixed with the date — handy for your promotion records.</p>
+      </div>
+    </fieldset>
+
+    <p class="hint" style="border-top:1px solid var(--line);padding-top:13px">
+      Everything stays on this device. Your roster is never uploaded — there is no server to upload it to.
+      Settings are remembered in this browser.
+    </p>
+  </form>
+
+  <!-- ============ PREVIEW ============ -->
+  <main class="stage">
+    <div class="stage-head">
+      <h2>Preview</h2>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="sheets" id="sheets"></div>
+    <div class="empty" id="empty" hidden>Add a student name to see the certificate.</div>
+  </main>
+</div>
+
+<script>
+/* ======================================================================
+   CONFIG — this is the only block you need to touch to start selling.
+   ====================================================================== */
+const CONFIG = {
+  // 1. Paste your Stripe Payment Link / Gumroad / Lemon Squeezy URL here.
+  payUrl: "",
+
+  // 2. What you charge (display only — the real price lives on the payment page).
+  price: "$19",
+
+  // 3. Change this to any private phrase. It makes your unlock codes unique
+  //    to your copy. Changing it later invalidates codes already sold.
+  keySalt: "belt-certificate-studio",
+
+  // 4. Free tier: how many certificates per batch before the paywall.
+  freeLimit: 3,
+
+  // 5. Credit line printed on free certificates (removed once unlocked).
+  //    This is also your best marketing channel — parents keep these.
+  creditLine: "Made with Belt Certificate Studio · gryffin2021.github.io/belt-certificates",
+};
+
+/* ======================================================================
+   Licence keys — format BELT-XXXX-XXXX-CC, validated offline.
+   Generate codes to sell with keygen.html.
+   ====================================================================== */
+const A32 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"; // no I, L, O, U
+
+function keyChecksum(payload, salt){
+  let x = 0x811c9dc5;
+  const s = salt + "|" + payload;
+  for (let i = 0; i < s.length; i++){
+    x ^= s.charCodeAt(i);
+    x = Math.imul(x, 0x01000193) >>> 0;
+  }
+  return A32[(x >>> 5) & 31] + A32[x & 31];
+}
+
+function keyIsValid(raw, salt){
+  const k = String(raw || "").toUpperCase().replace(/[^0-9A-Z]/g, "");
+  if (!k.startsWith("BELT")) return false;
+  const body = k.slice(4);
+  if (body.length !== 10) return false;
+  const payload = body.slice(0, 8), check = body.slice(8);
+  if ([...payload].some(c => !A32.includes(c))) return false;
+  return keyChecksum(payload, salt) === check;
+}
+
+/* ---------------- storage (never throws) ---------------- */
+const store = {
+  get(k, fb){ try { const v = localStorage.getItem(k); return v === null ? fb : v; } catch { return fb; } },
+  set(k, v){ try { localStorage.setItem(k, v); } catch {} },
+  del(k){ try { localStorage.removeItem(k); } catch {} },
+};
+
+/* ---------------- belts ---------------- */
+const BELTS = [
+  ["White",            "#f7f7f7"],
+  ["White / Yellow",   "#f2e9a0"],
+  ["Yellow",           "#f2cc30"],
+  ["Yellow / Green",   "#b8c93a"],
+  ["Orange",           "#e07820"],
+  ["Green",            "#1f8a4c"],
+  ["Green / Blue",     "#179b86"],
+  ["Blue",             "#1b5fb0"],
+  ["Blue / Red",       "#6b3f9e"],
+  ["Purple",           "#6b3f9e"],
+  ["Red",              "#c1272d"],
+  ["Red / Black",      "#7a1a1f"],
+  ["Brown",            "#6b4423"],
+  ["Black — Poom 1",   "#141414"],
+  ["Black — Poom 2",   "#141414"],
+  ["Black — Poom 3",   "#141414"],
+  ["Black — 1st Dan",  "#141414"],
+  ["Black — 2nd Dan",  "#141414"],
+  ["Black — 3rd Dan",  "#141414"],
+  ["Black — 4th Dan",  "#141414"],
+  ["Black — 5th Dan",  "#141414"],
+  ["Black — 6th Dan",  "#141414"],
+  ["Black — 7th Dan",  "#141414"],
+  ["Black — 8th Dan",  "#141414"],
+  ["Black — 9th Dan",  "#141414"],
+];
+const beltColor = name => {
+  const n = String(name).toLowerCase();
+  let best = null;
+  for (const [label, hex] of BELTS){
+    const l = label.toLowerCase();
+    if (l === n) return hex;
+    if (!best && (n.includes(l.split(" ")[0]) || l.includes(n))) best = hex;
+  }
+  return best || "#222222";
+};
+
+/* ---------------- dom helpers ---------------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+const FIELDS = ["school","loc","inst","instTitle","inst2","inst2Title",
+                "sName","sBelt","sDate","bulk","bBelt","bDate",
+                "wTitle","wPre","wPost","accent"];
+
+let unlocked = false;
+let mode = store.get("bcs:mode", "one");
+let logoData = store.get("bcs:logo", "");
+
+/* ---------------- date formatting ---------------- */
+function fmtDate(iso){
+  if (!iso) return "";
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim());
+  if (!m) return iso.trim();                       // pass through free text
+  const d = new Date(+m[1], +m[2] - 1, +m[3]);
+  if (isNaN(d)) return iso.trim();
+  return d.toLocaleDateString("en-US", { month:"long", day:"numeric", year:"numeric" });
+}
+const todayISO = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+};
+
+/* ---------------- build the roster ---------------- */
+function roster(){
+  if (mode === "one"){
+    const name = $("sName").value.trim();
+    return name ? [{ name, belt: $("sBelt").value, date: $("sDate").value }] : [];
+  }
+  const defBelt = $("bBelt").value, defDate = $("bDate").value;
+  return $("bulk").value.split(/\r?\n/).map(line => {
+    const t = line.trim();
+    if (!t) return null;
+    const p = t.split(/\s*[,;\t]\s*/);
+    const name = (p[0] || "").trim();
+    if (!name) return null;
+    return { name, belt: (p[1] || "").trim() || defBelt, date: (p[2] || "").trim() || defDate };
+  }).filter(Boolean);
+}
+
+/* ---------------- render ---------------- */
+const CORNER = `<svg class="c-corner %P%" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+  <path d="M2 38V14C2 7.4 7.4 2 14 2h24" stroke="currentColor" stroke-width="1.5"/>
+  <path d="M8 38V16c0-4.4 3.6-8 8-8h22" stroke="currentColor" stroke-width="0.8" opacity=".6"/>
+  <circle cx="13" cy="13" r="2.2" fill="currentColor"/>
+</svg>`;
+const corners = ["tl","tr","bl","br"].map(p => CORNER.replace("%P%", p)).join("");
+
+function certHTML(stu, i, opts){
+  const seal = opts.serialOn
+    ? `<div class="c-seal"><div class="s1">Rank</div><div class="s2">${esc((stu.belt.match(/\d/) || ["•"])[0])}</div><div class="s3">Certified</div></div>`
+    : `<div class="c-seal"><div class="s1">Official</div><div class="s2">★</div><div class="s3">Promotion</div></div>`;
+
+  const sig2 = opts.inst2
+    ? `<div class="c-sig"><div class="c-sig-line"></div><div class="c-sig-val">${esc(opts.inst2)}</div><p class="c-sig-cap">${esc(opts.inst2Title || "Signature")}</p></div>`
+    : "";
+
+  return `
+<div class="cert" style="--c-accent:${esc(opts.accent)};--c-belt:${esc(beltColor(stu.belt))}">
+  <div class="cert-inner">
+    ${corners}
+    ${opts.logo ? `<img class="c-logo" src="${esc(opts.logo)}" alt="">` : ""}
+    <h1 class="c-school">${esc(opts.school || "Your School Name")}</h1>
+    ${opts.loc ? `<p class="c-loc">${esc(opts.loc)}</p>` : ""}
+    <div class="c-rule"></div>
+    <h2 class="c-title">${esc(opts.wTitle)}</h2>
+    <p class="c-sub">${esc(opts.wPre)}</p>
+    <p class="c-name">${esc(stu.name)}</p>
+    <div class="c-name-rule"></div>
+    <p class="c-rank-label">${esc(opts.wPost)}</p>
+    <p class="c-rank"><span class="c-belt"></span>${esc(stu.belt || "—")}</p>
+    <div class="c-foot">
+      <div class="c-sig">
+        <div class="c-sig-line"></div>
+        <div class="c-sig-val">${esc(fmtDate(stu.date) || "—")}</div>
+        <p class="c-sig-cap">Date of promotion</p>
+      </div>
+      ${seal}
+      ${sig2}
+      <div class="c-sig">
+        <div class="c-sig-line"></div>
+        <div class="c-sig-val">${esc(opts.inst || "—")}</div>
+        <p class="c-sig-cap">${esc(opts.instTitle || "Instructor")}</p>
+      </div>
+    </div>
+    ${opts.serialOn ? `<div class="c-serial">No. ${esc((stu.date || todayISO()).replace(/-/g,""))}-${String(i+1).padStart(3,"0")}</div>` : ""}
+    ${opts.credit ? `<div class="c-credit">${esc(opts.credit)}</div>` : ""}
+  </div>
+</div>`;
+}
+
+function render(){
+  const all = roster();
+  const capped = unlocked ? all : all.slice(0, CONFIG.freeLimit);
+  const opts = {
+    school: $("school").value.trim(),
+    loc: $("loc").value.trim(),
+    inst: $("inst").value.trim(),
+    instTitle: $("instTitle").value.trim(),
+    inst2: $("inst2").value.trim(),
+    inst2Title: $("inst2Title").value.trim(),
+    wTitle: $("wTitle").value.trim() || "Certificate of Promotion",
+    wPre: $("wPre").value.trim(),
+    wPost: $("wPost").value.trim(),
+    accent: $("accent").value,
+    serialOn: $("serialOn").checked,
+    logo: logoData,
+    credit: unlocked ? "" : CONFIG.creditLine,
+  };
+
+  $("sheets").innerHTML = capped
+    .map((s, i) => `<div class="sheet">${certHTML(s, i, opts)}</div>`).join("");
+  $("empty").hidden = capped.length > 0;
+
+  const held = all.length - capped.length;
+  $("count").textContent = all.length === 0 ? ""
+    : held > 0
+      ? `${capped.length} of ${all.length} shown · ${held} more need an unlock code`
+      : `${capped.length} certificate${capped.length === 1 ? "" : "s"} · ${capped.length} page${capped.length === 1 ? "" : "s"}`;
+
+  $("printBtn").disabled = capped.length === 0;
+}
+
+/* ---------------- unlock UI ---------------- */
+function paintGate(){
+  const g = $("gate"), t = $("gateTxt"), b = $("gateBtn");
+  g.classList.toggle("unlocked", unlocked);
+  if (unlocked){
+    t.innerHTML = `<span class="pill">Unlocked</span> Unlimited certificates, no credit line. Thank you.`;
+    b.textContent = "Remove code";
+  } else {
+    t.innerHTML = `<b>Free:</b> ${CONFIG.freeLimit} certificates per batch, with a small credit line at the foot. `
+                + `Unlock unlimited printing and remove it for ${esc(CONFIG.price)}, one time.`;
+    b.textContent = "Unlock";
+  }
+}
+
+$("gateBtn").addEventListener("click", () => {
+  if (unlocked){
+    if (!confirm("Remove the unlock code from this browser?")) return;
+    store.del("bcs:key"); unlocked = false; paintGate(); render(); return;
+  }
+  if (!CONFIG.payUrl){
+    alert("Setup needed\n\nOpen index.html and paste your payment link into CONFIG.payUrl, "
+        + "then generate codes to sell with keygen.html.\n\nSee MONETIZE.md for the 30-second version.");
+  } else if (confirm(`Unlock unlimited certificates for ${CONFIG.price}.\n\nOK  →  open the payment page\nCancel  →  I already have a code`)){
+    window.open(CONFIG.payUrl, "_blank", "noopener");
+    return;
+  }
+  const entered = prompt("Paste your unlock code:\n\n(looks like BELT-XXXX-XXXX-XX)");
+  if (entered === null) return;
+  if (keyIsValid(entered, CONFIG.keySalt)){
+    store.set("bcs:key", entered.trim());
+    unlocked = true; paintGate(); render();
+    alert("Unlocked. Print as many as you like.");
+  } else {
+    alert("That code was not recognised. Check for typos, or use the code exactly as it appeared after payment.");
+  }
+});
+
+/* ---------------- wiring ---------------- */
+function fillBelts(sel, def){
+  sel.innerHTML = BELTS.map(([label]) => `<option value="${esc(label)}">${esc(label)}</option>`).join("");
+  sel.value = def;
+}
+
+function setMode(m){
+  mode = m;
+  $("modeOne").setAttribute("aria-pressed", String(m === "one"));
+  $("modeMany").setAttribute("aria-pressed", String(m === "many"));
+  $("paneOne").hidden = m !== "one";
+  $("paneMany").hidden = m !== "many";
+  store.set("bcs:mode", m);
+  render();
+}
+$("modeOne").addEventListener("click", () => setMode("one"));
+$("modeMany").addEventListener("click", () => setMode("many"));
+
+$("printBtn").addEventListener("click", () => window.print());
+
+$("themeBtn").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme");
+  const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+  const next = cur ? (cur === "dark" ? "light" : "dark") : (dark ? "light" : "dark");
+  document.documentElement.setAttribute("data-theme", next);
+  store.set("bcs:theme", next);
+});
+
+function paintLogo(){
+  $("logoPrev").innerHTML = logoData ? `<img src="${esc(logoData)}" alt="">` : "none";
+}
+$("logoIn").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  if (f.size > 1.5 * 1024 * 1024){
+    alert("Please use a logo under 1.5 MB — it has to fit in this browser's storage.");
+    e.target.value = ""; return;
+  }
+  const r = new FileReader();
+  r.onload = () => { logoData = r.result; store.set("bcs:logo", logoData); paintLogo(); render(); };
+  r.readAsDataURL(f);
+});
+$("logoClear").addEventListener("click", () => {
+  logoData = ""; store.del("bcs:logo"); $("logoIn").value = ""; paintLogo(); render();
+});
+
+/* ---------------- boot ---------------- */
+(function init(){
+  const t = store.get("bcs:theme", "");
+  if (t) document.documentElement.setAttribute("data-theme", t);
+
+  fillBelts($("sBelt"), "Green");
+  fillBelts($("bBelt"), "Green");
+  $("sDate").value = todayISO();
+  $("bDate").value = todayISO();
+
+  // restore saved values, then persist on every edit
+  for (const id of FIELDS){
+    const el = $(id);
+    const saved = store.get("bcs:" + id, null);
+    if (saved !== null && saved !== "") el.value = saved;
+    el.addEventListener("input", () => { store.set("bcs:" + id, el.value); render(); });
+    el.addEventListener("change", () => { store.set("bcs:" + id, el.value); render(); });
+  }
+  const so = $("serialOn");
+  so.checked = store.get("bcs:serialOn", "0") === "1";
+  so.addEventListener("change", () => { store.set("bcs:serialOn", so.checked ? "1" : "0"); render(); });
+
+  unlocked = keyIsValid(store.get("bcs:key", ""), CONFIG.keySalt);
+  if (!unlocked) store.del("bcs:key");
+
+  // first-time demo content so the page is never blank
+  if (!store.get("bcs:seen", "")){
+    if (!$("school").value) $("school").value = "Evergreen Taekwondo Academy";
+    if (!$("inst").value)   $("inst").value   = "Master Jae-won Park";
+    if (!$("instTitle").value) $("instTitle").value = "Head Instructor";
+    if (!$("sName").value)  $("sName").value  = "Ava Thompson";
+    store.set("bcs:seen", "1");
+  }
+
+  paintLogo();
+  paintGate();
+  render();
+})();
+</script>
+</body>
+</html>
