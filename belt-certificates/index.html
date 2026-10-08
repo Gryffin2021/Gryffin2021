@@ -191,8 +191,12 @@ textarea{resize:vertical;min-height:112px;font-family:ui-monospace,SFMono-Regula
   border:0.07cqw solid rgba(0,0,0,.3);
   background:var(--c-belt,#222);
 }
+.c-body{
+  flex:1;width:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
 .c-foot{
-  margin-top:auto;width:100%;display:flex;align-items:flex-end;
+  width:100%;display:flex;align-items:flex-end;
   justify-content:space-between;gap:3cqw;padding-top:2.4cqw;
 }
 .c-sig{flex:1;min-width:0;max-width:30cqw}
@@ -560,12 +564,14 @@ function certHTML(stu, i, opts){
     <h1 class="c-school">${esc(opts.school || "Your School Name")}</h1>
     ${opts.loc ? `<p class="c-loc">${esc(opts.loc)}</p>` : ""}
     <div class="c-rule"></div>
+    <div class="c-body">
     <h2 class="c-title">${esc(opts.wTitle)}</h2>
     <p class="c-sub">${esc(opts.wPre)}</p>
     <p class="c-name">${esc(stu.name)}</p>
     <div class="c-name-rule"></div>
     <p class="c-rank-label">${esc(opts.wPost)}</p>
     <p class="c-rank"><span class="c-belt"></span>${esc(stu.belt || "—")}</p>
+    </div>
     <div class="c-foot">
       <div class="c-sig">
         <div class="c-sig-line"></div>
